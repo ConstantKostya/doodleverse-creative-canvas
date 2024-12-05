@@ -1,4 +1,4 @@
-import { Pencil, Eraser, Trash2, Square, Circle, Triangle, Paintbrush, Undo, Save, LineHorizontal } from "lucide-react";
+import { Pencil, Eraser, Trash2, Square, Circle, Triangle, Paintbrush, Undo, Save, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
@@ -68,7 +68,7 @@ export const Toolbar = ({
           onClick={() => setActiveTool("line")}
           className="w-10 h-10"
         >
-          <LineHorizontal className="h-5 w-5" />
+          <Minus className="h-5 w-5" />
         </Button>
         <Button
           variant={activeTool === "rectangle" ? "default" : "outline"}
