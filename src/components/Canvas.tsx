@@ -50,6 +50,15 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
     ctx.current.lineJoin = "round";
   }, [activeColor, activeTool, brushSize]);
 
+  const colorMatch = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) => {
+    const tolerance = 30; // Adjust this value to control how strict the color matching is
+    return (
+      Math.abs(r1 - r2) <= tolerance &&
+      Math.abs(g1 - g2) <= tolerance &&
+      Math.abs(b1 - b2) <= tolerance
+    );
+  };
+
   const floodFill = (startX: number, startY: number, fillColor: string) => {
     if (!ctx.current || !canvasRef.current) return;
 
@@ -71,9 +80,7 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
     const fillB = parseInt(fillColor.slice(5, 7), 16);
 
     if (
-      startR === fillR &&
-      startG === fillG &&
-      startB === fillB
+      colorMatch(startR, startG, startB, fillR, fillG, fillB)
     ) {
       return;
     }
@@ -89,9 +96,7 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
         x >= imageData.width ||
         y < 0 ||
         y >= imageData.height ||
-        pixels[pos] !== startR ||
-        pixels[pos + 1] !== startG ||
-        pixels[pos + 2] !== startB
+        !colorMatch(pixels[pos], pixels[pos + 1], pixels[pos + 2], startR, startG, startB)
       ) {
         continue;
       }
