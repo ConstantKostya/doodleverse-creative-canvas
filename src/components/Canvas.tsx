@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { floodFill, drawShape, saveCanvas } from "@/utils/drawingUtils";
 
 interface CanvasProps {
   activeColor: string;
-  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle";
+  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle";
   brushSize: number;
   fillShapes: boolean;
+  onSave: () => void;
 }
 
-export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: CanvasProps) => {
+export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes, onSave }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
@@ -40,8 +42,6 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: Canva
 
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
-
-    // Add undo event listener
     canvas.addEventListener("undoAction", handleUndo);
 
     return () => {
@@ -76,68 +76,6 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: Canva
     }
   };
 
-  const colorMatch = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) => {
-    const tolerance = 30; // Adjust this value to control how strict the color matching is
-    return (
-      Math.abs(r1 - r2) <= tolerance &&
-      Math.abs(g1 - g2) <= tolerance &&
-      Math.abs(b1 - b2) <= tolerance
-    );
-  };
-
-  const floodFill = (startX: number, startY: number, fillColor: string) => {
-    if (!ctx.current || !canvasRef.current) return;
-
-    const imageData = ctx.current.getImageData(
-      0,
-      0,
-      canvasRef.current.width,
-      canvasRef.current.height
-    );
-    const pixels = imageData.data;
-
-    const startPos = (startY * imageData.width + startX) * 4;
-    const startR = pixels[startPos];
-    const startG = pixels[startPos + 1];
-    const startB = pixels[startPos + 2];
-
-    const fillR = parseInt(fillColor.slice(1, 3), 16);
-    const fillG = parseInt(fillColor.slice(3, 5), 16);
-    const fillB = parseInt(fillColor.slice(5, 7), 16);
-
-    if (
-      colorMatch(startR, startG, startB, fillR, fillG, fillB)
-    ) {
-      return;
-    }
-
-    const stack = [[startX, startY]];
-    
-    while (stack.length > 0) {
-      const [x, y] = stack.pop()!;
-      const pos = (y * imageData.width + x) * 4;
-
-      if (
-        x < 0 ||
-        x >= imageData.width ||
-        y < 0 ||
-        y >= imageData.height ||
-        !colorMatch(pixels[pos], pixels[pos + 1], pixels[pos + 2], startR, startG, startB)
-      ) {
-        continue;
-      }
-
-      pixels[pos] = fillR;
-      pixels[pos + 1] = fillG;
-      pixels[pos + 2] = fillB;
-      pixels[pos + 3] = 255;
-
-      stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
-    }
-
-    ctx.current.putImageData(imageData, 0, 0);
-  };
-
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
     isDrawing.current = true;
     const pos = getPosition(e);
@@ -148,7 +86,16 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: Canva
 
     if (activeTool === "fill") {
       saveState();
-      floodFill(Math.floor(pos.x), Math.floor(pos.y), activeColor);
+      if (ctx.current && canvasRef.current) {
+        floodFill(
+          ctx.current,
+          Math.floor(pos.x),
+          Math.floor(pos.y),
+          activeColor,
+          canvasRef.current.width,
+          canvasRef.current.height
+        );
+      }
       isDrawing.current = false;
     } else {
       saveState();
@@ -175,25 +122,16 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: Canva
   const stopDrawing = () => {
     if (!isDrawing.current || !ctx.current || !canvasRef.current) return;
 
-    if (activeTool === "rectangle") {
-      const width = lastX.current - startX.current;
-      const height = lastY.current - startY.current;
-      
-      if (fillShapes) {
-        ctx.current.fillRect(startX.current, startY.current, width, height);
-      }
-      ctx.current.strokeRect(startX.current, startY.current, width, height);
-    } else if (activeTool === "circle") {
-      const radius = Math.sqrt(
-        Math.pow(lastX.current - startX.current, 2) +
-        Math.pow(lastY.current - startY.current, 2)
+    if (activeTool === "rectangle" || activeTool === "circle" || activeTool === "triangle") {
+      drawShape(
+        ctx.current,
+        activeTool,
+        startX.current,
+        startY.current,
+        lastX.current,
+        lastY.current,
+        fillShapes
       );
-      ctx.current.beginPath();
-      ctx.current.arc(startX.current, startY.current, radius, 0, Math.PI * 2);
-      if (fillShapes) {
-        ctx.current.fill();
-      }
-      ctx.current.stroke();
     }
 
     isDrawing.current = false;
@@ -209,12 +147,11 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: Canva
     return { x, y };
   };
 
-  const clearCanvas = () => {
-    if (!canvasRef.current || !ctx.current) return;
-    saveState();
-    ctx.current.fillStyle = "#ffffff";
-    ctx.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-    toast("Canvas cleared!");
+  const handleSave = () => {
+    if (!canvasRef.current) return;
+    saveCanvas(canvasRef.current);
+    onSave();
+    toast("Drawing saved successfully!");
   };
 
   return (

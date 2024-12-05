@@ -1,15 +1,16 @@
-import { Pencil, Eraser, Trash2, Square, Circle, Paintbrush, Undo, SquareIcon } from "lucide-react";
+import { Pencil, Eraser, Trash2, Square, Circle, Triangle, Paintbrush, Undo, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 interface ToolbarProps {
-  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle";
-  setActiveTool: (tool: "pencil" | "eraser" | "fill" | "rectangle" | "circle") => void;
+  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle";
+  setActiveTool: (tool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle") => void;
   brushSize: number;
   setBrushSize: (size: number) => void;
   onUndo: () => void;
+  onSave: () => void;
   fillShapes: boolean;
   setFillShapes: (fill: boolean) => void;
 }
@@ -20,6 +21,7 @@ export const Toolbar = ({
   brushSize,
   setBrushSize,
   onUndo,
+  onSave,
   fillShapes,
   setFillShapes,
 }: ToolbarProps) => {
@@ -77,6 +79,14 @@ export const Toolbar = ({
           <Circle className="h-5 w-5" />
         </Button>
         <Button
+          variant={activeTool === "triangle" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setActiveTool("triangle")}
+          className="w-10 h-10"
+        >
+          <Triangle className="h-5 w-5" />
+        </Button>
+        <Button
           variant="outline"
           size="icon"
           onClick={handleClear}
@@ -91,6 +101,14 @@ export const Toolbar = ({
           className="w-10 h-10"
         >
           <Undo className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onSave}
+          className="w-10 h-10"
+        >
+          <Save className="h-5 w-5" />
         </Button>
       </div>
       <div className="w-32 flex items-center gap-2">

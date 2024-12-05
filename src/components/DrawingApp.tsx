@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const DrawingApp = () => {
   const [activeColor, setActiveColor] = useState("#1A1F2C");
-  const [activeTool, setActiveTool] = useState<"pencil" | "eraser" | "fill" | "rectangle" | "circle">("pencil");
+  const [activeTool, setActiveTool] = useState<"pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle">("pencil");
   const [brushSize, setBrushSize] = useState(5);
   const [fillShapes, setFillShapes] = useState(true);
 
@@ -19,11 +19,14 @@ export const DrawingApp = () => {
     if (canvas) {
       const ctx = canvas.getContext("2d");
       if (ctx) {
-        // Trigger the undo action in Canvas component
         const event = new CustomEvent("undoAction");
         canvas.dispatchEvent(event);
       }
     }
+  };
+
+  const handleSave = () => {
+    toast("Preparing to save your drawing...");
   };
 
   return (
@@ -36,6 +39,7 @@ export const DrawingApp = () => {
             brushSize={brushSize}
             setBrushSize={setBrushSize}
             onUndo={handleUndo}
+            onSave={handleSave}
             fillShapes={fillShapes}
             setFillShapes={setFillShapes}
           />
@@ -46,6 +50,7 @@ export const DrawingApp = () => {
           activeTool={activeTool}
           brushSize={brushSize}
           fillShapes={fillShapes}
+          onSave={handleSave}
         />
       </div>
     </div>
