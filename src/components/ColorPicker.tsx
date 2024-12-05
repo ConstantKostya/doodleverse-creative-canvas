@@ -11,6 +11,7 @@ export const ColorPicker = ({ activeColor, setActiveColor }: ColorPickerProps) =
     "#ff5757",
     "#4CAF50",
     "#2196F3",
+    "#FFD700", // Added yellow
   ];
 
   return (
@@ -27,6 +28,12 @@ export const ColorPicker = ({ activeColor, setActiveColor }: ColorPickerProps) =
             onClick={() => setActiveColor(color)}
           />
         ))}
+        <input
+          type="color"
+          value={activeColor}
+          onChange={(e) => setActiveColor(e.target.value)}
+          className="w-8 h-8 rounded-full cursor-pointer"
+        />
       </div>
     </div>
   );
