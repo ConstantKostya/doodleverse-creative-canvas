@@ -36,8 +36,8 @@ export const Toolbar = ({
   };
 
   return (
-    <div className="flex items-center gap-4 flex-wrap">
-      <div className="flex gap-2">
+    <div className="flex items-center gap-2 flex-nowrap">
+      <div className="flex gap-1">
         <Button
           variant={activeTool === "pencil" ? "default" : "outline"}
           size="icon"
