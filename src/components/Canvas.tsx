@@ -5,9 +5,10 @@ interface CanvasProps {
   activeColor: string;
   activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle";
   brushSize: number;
+  fillShapes: boolean;
 }
 
-export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
+export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes }: CanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
   const ctx = useRef<CanvasRenderingContext2D | null>(null);
@@ -15,6 +16,8 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
   const lastY = useRef<number>(0);
   const startX = useRef<number>(0);
   const startY = useRef<number>(0);
+  const undoStack = useRef<ImageData[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -38,7 +41,13 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
 
-    return () => window.removeEventListener("resize", resizeCanvas);
+    // Add undo event listener
+    canvas.addEventListener("undoAction", handleUndo);
+
+    return () => {
+      window.removeEventListener("resize", resizeCanvas);
+      canvas.removeEventListener("undoAction", handleUndo);
+    };
   }, []);
 
   useEffect(() => {
@@ -49,6 +58,23 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
     ctx.current.lineCap = "round";
     ctx.current.lineJoin = "round";
   }, [activeColor, activeTool, brushSize]);
+
+  const saveState = () => {
+    if (!ctx.current || !canvasRef.current) return;
+    const imageData = ctx.current.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
+    undoStack.current.push(imageData);
+    setCanUndo(true);
+  };
+
+  const handleUndo = () => {
+    if (!ctx.current || !canvasRef.current || undoStack.current.length === 0) return;
+    const previousState = undoStack.current.pop();
+    if (previousState) {
+      ctx.current.putImageData(previousState, 0, 0);
+      setCanUndo(undoStack.current.length > 0);
+      toast("Undo successful!");
+    }
+  };
 
   const colorMatch = (r1: number, g1: number, b1: number, r2: number, g2: number, b2: number) => {
     const tolerance = 30; // Adjust this value to control how strict the color matching is
@@ -121,8 +147,11 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
     startY.current = pos.y;
 
     if (activeTool === "fill") {
+      saveState();
       floodFill(Math.floor(pos.x), Math.floor(pos.y), activeColor);
       isDrawing.current = false;
+    } else {
+      saveState();
     }
   };
 
@@ -149,8 +178,11 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
     if (activeTool === "rectangle") {
       const width = lastX.current - startX.current;
       const height = lastY.current - startY.current;
+      
+      if (fillShapes) {
+        ctx.current.fillRect(startX.current, startY.current, width, height);
+      }
       ctx.current.strokeRect(startX.current, startY.current, width, height);
-      ctx.current.fillRect(startX.current, startY.current, width, height);
     } else if (activeTool === "circle") {
       const radius = Math.sqrt(
         Math.pow(lastX.current - startX.current, 2) +
@@ -158,7 +190,9 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
       );
       ctx.current.beginPath();
       ctx.current.arc(startX.current, startY.current, radius, 0, Math.PI * 2);
-      ctx.current.fill();
+      if (fillShapes) {
+        ctx.current.fill();
+      }
       ctx.current.stroke();
     }
 
@@ -177,6 +211,7 @@ export const Canvas = ({ activeColor, activeTool, brushSize }: CanvasProps) => {
 
   const clearCanvas = () => {
     if (!canvasRef.current || !ctx.current) return;
+    saveState();
     ctx.current.fillStyle = "#ffffff";
     ctx.current.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     toast("Canvas cleared!");

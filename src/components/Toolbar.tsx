@@ -1,6 +1,7 @@
-import { Pencil, Eraser, Trash2, Square, Circle, Paintbrush } from "lucide-react";
+import { Pencil, Eraser, Trash2, Square, Circle, Paintbrush, Undo, SquareIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 interface ToolbarProps {
@@ -8,6 +9,9 @@ interface ToolbarProps {
   setActiveTool: (tool: "pencil" | "eraser" | "fill" | "rectangle" | "circle") => void;
   brushSize: number;
   setBrushSize: (size: number) => void;
+  onUndo: () => void;
+  fillShapes: boolean;
+  setFillShapes: (fill: boolean) => void;
 }
 
 export const Toolbar = ({
@@ -15,6 +19,9 @@ export const Toolbar = ({
   setActiveTool,
   brushSize,
   setBrushSize,
+  onUndo,
+  fillShapes,
+  setFillShapes,
 }: ToolbarProps) => {
   const handleClear = () => {
     const canvas = document.querySelector("canvas");
@@ -27,7 +34,7 @@ export const Toolbar = ({
   };
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 flex-wrap">
       <div className="flex gap-2">
         <Button
           variant={activeTool === "pencil" ? "default" : "outline"}
@@ -77,6 +84,14 @@ export const Toolbar = ({
         >
           <Trash2 className="h-5 w-5" />
         </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onUndo}
+          className="w-10 h-10"
+        >
+          <Undo className="h-5 w-5" />
+        </Button>
       </div>
       <div className="w-32 flex items-center gap-2">
         <span className="text-sm text-gray-500">Size:</span>
@@ -87,6 +102,13 @@ export const Toolbar = ({
           max={20}
           step={1}
           className="w-24"
+        />
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-gray-500">Fill Shapes:</span>
+        <Switch
+          checked={fillShapes}
+          onCheckedChange={setFillShapes}
         />
       </div>
     </div>

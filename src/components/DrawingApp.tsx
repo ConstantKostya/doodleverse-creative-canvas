@@ -8,10 +8,23 @@ export const DrawingApp = () => {
   const [activeColor, setActiveColor] = useState("#1A1F2C");
   const [activeTool, setActiveTool] = useState<"pencil" | "eraser" | "fill" | "rectangle" | "circle">("pencil");
   const [brushSize, setBrushSize] = useState(5);
+  const [fillShapes, setFillShapes] = useState(true);
 
   useEffect(() => {
     toast("Welcome to the Drawing App! Start drawing on the canvas.");
   }, []);
+
+  const handleUndo = () => {
+    const canvas = document.querySelector("canvas");
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      if (ctx) {
+        // Trigger the undo action in Canvas component
+        const event = new CustomEvent("undoAction");
+        canvas.dispatchEvent(event);
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-muted p-4 sm:p-8">
@@ -22,6 +35,9 @@ export const DrawingApp = () => {
             setActiveTool={setActiveTool}
             brushSize={brushSize}
             setBrushSize={setBrushSize}
+            onUndo={handleUndo}
+            fillShapes={fillShapes}
+            setFillShapes={setFillShapes}
           />
           <ColorPicker activeColor={activeColor} setActiveColor={setActiveColor} />
         </div>
@@ -29,6 +45,7 @@ export const DrawingApp = () => {
           activeColor={activeColor}
           activeTool={activeTool}
           brushSize={brushSize}
+          fillShapes={fillShapes}
         />
       </div>
     </div>
