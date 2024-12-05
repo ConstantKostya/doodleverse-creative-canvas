@@ -4,7 +4,7 @@ import { floodFill, drawShape, saveCanvas } from "@/utils/drawingUtils";
 
 interface CanvasProps {
   activeColor: string;
-  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle";
+  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle" | "line";
   brushSize: number;
   fillShapes: boolean;
   onSave: () => void;
@@ -113,6 +113,24 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes, onSave 
       ctx.current.moveTo(lastX.current, lastY.current);
       ctx.current.lineTo(pos.x, pos.y);
       ctx.current.stroke();
+    } else if (activeTool === "line") {
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = canvasRef.current.width;
+      tempCanvas.height = canvasRef.current.height;
+      const tempCtx = tempCanvas.getContext("2d");
+      
+      if (tempCtx) {
+        tempCtx.putImageData(undoStack.current[undoStack.current.length - 1], 0, 0);
+        tempCtx.strokeStyle = ctx.current.strokeStyle;
+        tempCtx.lineWidth = ctx.current.lineWidth;
+        tempCtx.beginPath();
+        tempCtx.moveTo(startX.current, startY.current);
+        tempCtx.lineTo(pos.x, pos.y);
+        tempCtx.stroke();
+        
+        ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        ctx.current.drawImage(tempCanvas, 0, 0);
+      }
     }
 
     lastX.current = pos.x;
@@ -132,6 +150,11 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes, onSave 
         lastY.current,
         fillShapes
       );
+    } else if (activeTool === "line") {
+      ctx.current.beginPath();
+      ctx.current.moveTo(startX.current, startY.current);
+      ctx.current.lineTo(lastX.current, lastY.current);
+      ctx.current.stroke();
     }
 
     isDrawing.current = false;

@@ -1,12 +1,12 @@
-import { Pencil, Eraser, Trash2, Square, Circle, Triangle, Paintbrush, Undo, Save } from "lucide-react";
+import { Pencil, Eraser, Trash2, Square, Circle, Triangle, Paintbrush, Undo, Save, LineHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
 interface ToolbarProps {
-  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle";
-  setActiveTool: (tool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle") => void;
+  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle" | "line";
+  setActiveTool: (tool: "pencil" | "eraser" | "fill" | "rectangle" | "circle" | "triangle" | "line") => void;
   brushSize: number;
   setBrushSize: (size: number) => void;
   onUndo: () => void;
@@ -63,6 +63,14 @@ export const Toolbar = ({
           <Paintbrush className="h-5 w-5" />
         </Button>
         <Button
+          variant={activeTool === "line" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setActiveTool("line")}
+          className="w-10 h-10"
+        >
+          <LineHorizontal className="h-5 w-5" />
+        </Button>
+        <Button
           variant={activeTool === "rectangle" ? "default" : "outline"}
           size="icon"
           onClick={() => setActiveTool("rectangle")}
@@ -102,14 +110,6 @@ export const Toolbar = ({
         >
           <Undo className="h-5 w-5" />
         </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onSave}
-          className="w-10 h-10"
-        >
-          <Save className="h-5 w-5" />
-        </Button>
       </div>
       <div className="w-32 flex items-center gap-2">
         <span className="text-sm text-gray-500">Size:</span>
@@ -129,6 +129,14 @@ export const Toolbar = ({
           onCheckedChange={setFillShapes}
         />
       </div>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onSave}
+        className="w-10 h-10 ml-auto"
+      >
+        <Save className="h-5 w-5" />
+      </Button>
     </div>
   );
 };
