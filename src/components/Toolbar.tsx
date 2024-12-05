@@ -1,11 +1,11 @@
-import { Pencil, Eraser, Trash2 } from "lucide-react";
+import { Pencil, Eraser, Trash2, Square, Circle, Paintbrush } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
 interface ToolbarProps {
-  activeTool: "pencil" | "eraser";
-  setActiveTool: (tool: "pencil" | "eraser") => void;
+  activeTool: "pencil" | "eraser" | "fill" | "rectangle" | "circle";
+  setActiveTool: (tool: "pencil" | "eraser" | "fill" | "rectangle" | "circle") => void;
   brushSize: number;
   setBrushSize: (size: number) => void;
 }
@@ -44,6 +44,30 @@ export const Toolbar = ({
           className="w-10 h-10"
         >
           <Eraser className="h-5 w-5" />
+        </Button>
+        <Button
+          variant={activeTool === "fill" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setActiveTool("fill")}
+          className="w-10 h-10"
+        >
+          <Paintbrush className="h-5 w-5" />
+        </Button>
+        <Button
+          variant={activeTool === "rectangle" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setActiveTool("rectangle")}
+          className="w-10 h-10"
+        >
+          <Square className="h-5 w-5" />
+        </Button>
+        <Button
+          variant={activeTool === "circle" ? "default" : "outline"}
+          size="icon"
+          onClick={() => setActiveTool("circle")}
+          className="w-10 h-10"
+        >
+          <Circle className="h-5 w-5" />
         </Button>
         <Button
           variant="outline"

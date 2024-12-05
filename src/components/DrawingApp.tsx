@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 export const DrawingApp = () => {
   const [activeColor, setActiveColor] = useState("#1A1F2C");
-  const [activeTool, setActiveTool] = useState<"pencil" | "eraser">("pencil");
+  const [activeTool, setActiveTool] = useState<"pencil" | "eraser" | "fill" | "rectangle" | "circle">("pencil");
   const [brushSize, setBrushSize] = useState(5);
 
   useEffect(() => {
