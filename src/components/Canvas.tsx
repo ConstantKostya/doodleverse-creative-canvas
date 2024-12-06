@@ -113,21 +113,40 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes, onSave 
       ctx.current.moveTo(lastX.current, lastY.current);
       ctx.current.lineTo(pos.x, pos.y);
       ctx.current.stroke();
-    } else if (activeTool === "line") {
+    } else {
+      // Create temporary canvas for preview
       const tempCanvas = document.createElement("canvas");
       tempCanvas.width = canvasRef.current.width;
       tempCanvas.height = canvasRef.current.height;
       const tempCtx = tempCanvas.getContext("2d");
       
       if (tempCtx) {
+        // Draw the previous state
         tempCtx.putImageData(undoStack.current[undoStack.current.length - 1], 0, 0);
-        tempCtx.strokeStyle = ctx.current.strokeStyle;
-        tempCtx.lineWidth = ctx.current.lineWidth;
-        tempCtx.beginPath();
-        tempCtx.moveTo(startX.current, startY.current);
-        tempCtx.lineTo(pos.x, pos.y);
-        tempCtx.stroke();
         
+        // Set the same styles as the main context
+        tempCtx.strokeStyle = ctx.current.strokeStyle;
+        tempCtx.fillStyle = ctx.current.fillStyle;
+        tempCtx.lineWidth = ctx.current.lineWidth;
+        
+        if (activeTool === "line") {
+          tempCtx.beginPath();
+          tempCtx.moveTo(startX.current, startY.current);
+          tempCtx.lineTo(pos.x, pos.y);
+          tempCtx.stroke();
+        } else if (["rectangle", "circle", "triangle"].includes(activeTool)) {
+          drawShape(
+            tempCtx,
+            activeTool as "rectangle" | "circle" | "triangle",
+            startX.current,
+            startY.current,
+            pos.x,
+            pos.y,
+            fillShapes
+          );
+        }
+        
+        // Update the main canvas with the preview
         ctx.current.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         ctx.current.drawImage(tempCanvas, 0, 0);
       }
