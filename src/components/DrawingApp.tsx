@@ -26,7 +26,7 @@ export const DrawingApp = () => {
   };
 
   const handleSave = () => {
-    toast("Preparing to save your drawing...");
+    toast("Analyzing your drawing...");
   };
 
   return (

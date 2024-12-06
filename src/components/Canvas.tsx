@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { floodFill, drawShape, saveCanvas } from "@/utils/drawingUtils";
+import { floodFill, drawShape } from "@/utils/drawingUtils";
 
 interface CanvasProps {
   activeColor: string;
@@ -20,6 +20,7 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes, onSave 
   const startY = useRef<number>(0);
   const undoStack = useRef<ImageData[]>([]);
   const [canUndo, setCanUndo] = useState(false);
+  const [analysisPrompt, setAnalysisPrompt] = useState<string>("");
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -189,26 +190,64 @@ export const Canvas = ({ activeColor, activeTool, brushSize, fillShapes, onSave 
     return { x, y };
   };
 
-  const handleSave = () => {
+  const saveCanvas = async () => {
     if (!canvasRef.current) return;
-    saveCanvas(canvasRef.current);
+    
+    try {
+      // Convert canvas to base64 data URL
+      const imageData = canvasRef.current.toDataURL('image/png');
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', imageData);
+
+      // Send to PHP script
+      const response = await fetch('/analyse.php', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setAnalysisPrompt(data.prompt);
+        toast("Drawing analyzed successfully!");
+      } else {
+        toast("Error analyzing drawing");
+        console.error('Analysis failed:', data);
+      }
+    } catch (error) {
+      toast("Error saving drawing");
+      console.error('Error:', error);
+    }
+
     onSave();
-    toast("Drawing saved successfully!");
   };
 
   return (
-    <div className="w-full h-[600px] bg-white rounded-lg shadow-md overflow-hidden">
-      <canvas
-        ref={canvasRef}
-        className="w-full h-full touch-none"
-        onMouseDown={startDrawing}
-        onMouseMove={draw}
-        onMouseUp={stopDrawing}
-        onMouseOut={stopDrawing}
-        onTouchStart={startDrawing}
-        onTouchMove={draw}
-        onTouchEnd={stopDrawing}
-      />
+    <div className="space-y-4">
+      <div className="w-full h-[600px] bg-white rounded-lg shadow-md overflow-hidden">
+        <canvas
+          ref={canvasRef}
+          className="w-full h-full touch-none"
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={stopDrawing}
+          onMouseOut={stopDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={stopDrawing}
+        />
+      </div>
+      {analysisPrompt && (
+        <div className="w-full p-4 bg-white rounded-lg shadow-md">
+          <p className="text-gray-700">{analysisPrompt}</p>
+        </div>
+      )}
     </div>
   );
 };
